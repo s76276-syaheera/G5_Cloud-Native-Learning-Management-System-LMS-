@@ -1,18 +1,16 @@
-# Tahap 1: Bina projek
+# Tahap 1: Bina projek (Kompilasi)
 FROM openjdk:11-jdk-slim AS build
-COPY . /app
-WORKDIR /app
+COPY . /usr/src/app
+WORKDIR /usr/src/app
 
-# Kompilasi fail Java
-RUN mkdir -p build/classes && \
-    find src -name "*.java" > sources.txt && \
-    javac -d build/classes -sourcepath src @sources.txt
+# Kompilasi fail Java secara manual - TIADA ARAHAN ANT DI SINI
+RUN mkdir -p build && \
+    find . -name "*.java" > sources.txt && \
+    javac -d build @sources.txt
 
 # Tahap 2: Jalankan dalam Tomcat
 FROM tomcat:9-jdk11-openjdk
-# Salin fail .class ke webapps/ROOT/WEB-INF/classes
-COPY --from=build /app/build/classes /usr/local/tomcat/webapps/ROOT/WEB-INF/classes
-# Salin fail web (seperti .jsp, .html, .css)
-COPY --from=build /app/web /usr/local/tomcat/webapps/ROOT
+# Salin hasil kompilasi ke folder ROOT supaya Tomcat boleh jalankan
+COPY --from=build /usr/src/app/build /usr/local/tomcat/webapps/ROOT
 EXPOSE 8080
 CMD ["catalina.sh", "run"]
